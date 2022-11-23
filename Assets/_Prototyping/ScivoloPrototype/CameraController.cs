@@ -11,7 +11,7 @@ namespace _Prototyping.ScivoloPrototype
         public Transform cameraTransform;
         public float sensitivity;
         
-        private void Update()
+        private void LateUpdate()
         {
             var pitch = Input.GetAxis("Mouse Y");
             var yaw = Input.GetAxis("Mouse X");
