@@ -8,40 +8,22 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
     public class ScivoloKinematicMovement : MonoBehaviour
     {
         public float moveSpeed = 5f;
-
         public float jumpSpeed = 8f;
-        
         public float rotationSpeed = 720f;
-
         public float gravity = -25f;
-
         public CharacterMover mover;
-
         public GroundDetector groundDetector;
-
         public MeshRenderer groundedIndicator;
-
-        private const float minVerticalSpeed = -12f;
-
-        // Allowed time before the character is set to ungrounded from the last time he was safely grounded.
-        private const float timeBeforeUngrounded = 0.02f;
-
-        // Speed along the character local up direction.
-        private float verticalSpeed = 0f;
-
-        // Time after which the character should be considered ungrounded.
-        private float nextUngroundedTime = -1f;
-
-        private Transform cameraTransform;
         
+        private const float minVerticalSpeed = -12f;
+        private const float timeBeforeUngrounded = 0.02f;
+        private float verticalSpeed = 0f;
+        private float nextUngroundedTime = -1f;
+        private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
-
         private int contactCount;
-
         private bool isOnMovingPlatform = false;
-
         private MovingPlatform movingPlatform;
-
 
         private void Start()
         {
@@ -91,7 +73,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 velocity += verticalSpeed * transform.up;
             }
 
-            RotateTowards(velocity);
             mover.Move(velocity * deltaTime, moveContacts, out contactCount);
         }
 
