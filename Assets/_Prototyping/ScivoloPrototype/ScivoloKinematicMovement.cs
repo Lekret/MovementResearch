@@ -79,6 +79,10 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             {
                 var airMotion = movementInput * (deltaTime * airSpeedChangeRate);
                 var airHorizontalVelocity = horizontalVelocity + airMotion;
+                airHorizontalVelocity = Vector3.ClampMagnitude(airHorizontalVelocity, moveSpeed);
+                horizontalVelocity = airHorizontalVelocity;
+
+                /*
                 if (airHorizontalVelocity.sqrMagnitude <= moveSpeed * moveSpeed)
                 {
                     horizontalVelocity = airHorizontalVelocity;
@@ -91,6 +95,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                     if (Mathf.Abs(airHorizontalVelocity.z) < Mathf.Abs(horizontalVelocity.z))
                         horizontalVelocity.z = airHorizontalVelocity.z;
                 }
+                */
             }
 
             SetGroundedIndicatorColor(isGrounded);
@@ -137,9 +142,22 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 verticalSpeed = 0;
                 mover.isInWalkMode = false;
             }
-            
+
+            var beforePosition = mover.transform.position;
             mover.Move(resultVelocity * deltaTime, moveContacts, out contactCount);
+            var afterPosition = mover.transform.position;
+            var positionDifference = afterPosition - beforePosition;
+            ClampInputVelocityByRealMotion(positionDifference);
             shouldMoveUp = false;
+        }
+
+        private void ClampInputVelocityByRealMotion(Vector3 positionDifference)
+        {
+            positionDifference.y = 0;
+            var realMagnitude = positionDifference.magnitude / Time.deltaTime;
+            var inputMagnitude = horizontalVelocity.magnitude;
+            var newMagnitude = Mathf.Lerp(inputMagnitude, realMagnitude, Time.deltaTime * 8);
+            horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, newMagnitude);
         }
 
         private void LateUpdate()
@@ -149,11 +167,11 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private Vector3 GetMovementInput()
         {
-            float x = Input.GetAxis("Horizontal");
-            float y = Input.GetAxis("Vertical");
+            var x = Input.GetAxisRaw("Horizontal");
+            var y = Input.GetAxisRaw("Vertical");
 
-            Vector3 forward = Vector3.ProjectOnPlane(cameraTransform.forward, transform.up).normalized;
-            Vector3 right = Vector3.Cross(transform.up, forward);
+            var forward = Vector3.ProjectOnPlane(cameraTransform.forward, transform.up).normalized;
+            var right = Vector3.Cross(transform.up, forward);
 
             var result = x * right + y * forward;
             result = Vector3.ClampMagnitude(result, 1);
@@ -169,7 +187,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 return false;
             }
             
-            bool groundDetected = groundDetector.DetectGround(out groundInfo);
+            var groundDetected = groundDetector.DetectGround(out groundInfo);
 
             if (groundDetected)
             {
@@ -177,7 +195,9 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                     nextUngroundedTime = Time.time + timeBeforeUngrounded;
             }
             else
+            {
                 nextUngroundedTime = -1f;
+            }
 
             isGrounded = Time.time < nextUngroundedTime;
             return groundDetected;
@@ -204,7 +224,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private void BounceDownIfTouchedCeiling()
         {
-            for (int i = 0; i < contactCount; i++)
+            for (var i = 0; i < contactCount; i++)
             {
                 if (Vector3.Dot(moveContacts[i].normal, transform.up) < -0.7f)
                 {
