@@ -161,10 +161,12 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private bool DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo)
         {
-            groundInfo = default;
-            isGrounded = false;
             if (shouldMoveUp)
+            {
+                groundInfo = default;
+                isGrounded = false;
                 return false;
+            }
             
             bool groundDetected = groundDetector.DetectGround(out groundInfo);
 
