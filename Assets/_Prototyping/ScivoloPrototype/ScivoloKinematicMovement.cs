@@ -117,7 +117,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             {
                 mover.isInWalkMode = false;
 
-                BounceDownIfTouchedCeiling();
+                if (verticalSpeed > 0)
+                    BounceDownIfTouchedCeiling();
 
                 verticalSpeed += gravity * deltaTime;
 

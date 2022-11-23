@@ -11617,6 +11617,8 @@ MonoBehaviour:
   rotationSpeed: 900
   gravity: -25
   minVerticalSpeed: -18
+  groundSpeedChangeRate: 40
+  airSpeedChangeRate: 30
   mover: {fileID: 2573877700382832788}
   groundDetector: {fileID: 2573877700382832793}
   groundedIndicator: {fileID: 2573877701186792556}
