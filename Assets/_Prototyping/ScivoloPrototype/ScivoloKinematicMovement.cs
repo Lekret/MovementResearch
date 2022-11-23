@@ -1,5 +1,6 @@
 ﻿//#define MB_DEBUG
 
+using _Prototyping.ScivoloPrototype;
 using MenteBacata.ScivoloCharacterController;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
@@ -17,10 +18,9 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
     {
         public float moveSpeed = 5f;
         public float jumpSpeed = 8f;
-        public float rotationSpeed = 720f;
         public float gravity = -25f;
         public float minVerticalSpeed = -12f;
-        public float groundSpeedChangeRate = 15;
+        public float moveInputChangeRate = 12;
         public float airSpeedChangeRate = 15;
         public CharacterMover mover;
         public GroundDetector groundDetector;
@@ -30,6 +30,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private float nextUngroundedTime = -1f;
         private float verticalSpeed = 0;
         private Vector3 horizontalVelocity;
+        private Vector3 lerpedInput;
         private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
         private int contactCount;
@@ -57,6 +58,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         {
             var deltaTime = Time.deltaTime;
             var movementInput = GetMovementInput();
+            movementInput = Vector3.Lerp(lerpedInput, movementInput, deltaTime * moveInputChangeRate);
+            lerpedInput = movementInput;
             
             // Dash
             if (Input.GetKeyDown(KeyCode.LeftShift) &&
@@ -70,10 +73,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             var groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
             if (isGrounded)
             {
-                horizontalVelocity = Vector3.Lerp(
-                    horizontalVelocity,
-                    movementInput * moveSpeed, 
-                    Time.deltaTime * groundSpeedChangeRate);
+                horizontalVelocity = movementInput * moveSpeed;
             }
             else
             {
@@ -84,9 +84,10 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                     horizontalVelocity = airHorizontalVelocity;
                 }
                 else
-                {
+                {                    
                     if (Mathf.Abs(airHorizontalVelocity.x) < Mathf.Abs(horizontalVelocity.x))
                         horizontalVelocity.x = airHorizontalVelocity.x;
+
                     if (Mathf.Abs(airHorizontalVelocity.z) < Mathf.Abs(horizontalVelocity.z))
                         horizontalVelocity.z = airHorizontalVelocity.z;
                 }
@@ -143,8 +144,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private void LateUpdate()
         {
-            if (isOnMovingPlatform)
-                ApplyPlatformMovement(movingPlatform);
+            TryApplyPlatformMovement();
         }
 
         private Vector3 GetMovementInput()
@@ -189,29 +189,19 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 groundedIndicator.material.color = isGrounded ? Color.green : Color.blue;
         }
 
-        private void ApplyPlatformMovement(MovingPlatform movingPlatform)
+        private void TryApplyPlatformMovement()
         {
-            GetMovementFromMovingPlatform(movingPlatform, out Vector3 movement, out float upRotation);
-
-            transform.Translate(movement, Space.World);
-            transform.Rotate(0f, upRotation, 0f, Space.Self);
+            if (!isOnMovingPlatform)
+                return;
+            
+            movingPlatform.GetDeltaPositionAndRotation(out var deltaPosition, out var deltaRotation);
+            MovingPlatformUtils.GetMovementFromMovingPlatform(
+                transform, 
+                movingPlatform.transform.position,
+                deltaPosition,
+                deltaRotation);
         }
 
-        private void GetMovementFromMovingPlatform(MovingPlatform movingPlatform, out Vector3 movement, out float deltaAngleUp)
-        {
-            movingPlatform.GetDeltaPositionAndRotation(out Vector3 platformDeltaPosition, out Quaternion platformDeltaRotation);
-            Vector3 localPosition = transform.position - movingPlatform.transform.position;
-            movement = platformDeltaPosition + platformDeltaRotation * localPosition - localPosition;
-
-            platformDeltaRotation.ToAngleAxis(out float platformDeltaAngle, out Vector3 axis);
-            float axisDotUp = Vector3.Dot(axis, transform.up);
-
-            if (-0.1f < axisDotUp && axisDotUp < 0.1f)
-                deltaAngleUp = 0f;
-            else
-                deltaAngleUp = platformDeltaAngle * Mathf.Sign(axisDotUp);
-        }
-        
         private void BounceDownIfTouchedCeiling()
         {
             for (int i = 0; i < contactCount; i++)

@@ -8,9 +8,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         public float angularSpeed = 1f;
 
-        private Transform start;
-
-        private Transform end;
+        public Transform start;
+        public Transform end;
 
         private Vector3 deltaPosition;
 
@@ -26,8 +25,10 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private void Start()
         {
-            start = transform.GetChild(0);
-            end = transform.GetChild(1);
+            if (!start)
+                start = transform.GetChild(0);
+            if (!end) 
+                end = transform.GetChild(1);
 
             start.SetParent(transform.parent, true);
             end.SetParent(transform.parent, true);
