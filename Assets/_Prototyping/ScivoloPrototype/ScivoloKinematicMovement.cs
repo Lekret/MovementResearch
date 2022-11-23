@@ -37,6 +37,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private MovingPlatform movingPlatform;
         private float dashTime = 0;
         private Vector3 dashDirection;
+        private bool shouldMoveUp;
         
         private void Start()
         {
@@ -49,6 +50,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             verticalSpeed = velocity.y;
             velocity.y = 0;
             horizontalVelocity = velocity;
+            shouldMoveUp = verticalSpeed > 0;
         }
 
         private void Update()
@@ -66,9 +68,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             }
 
             var groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
-            if (isGrounded == verticalSpeed > 0)
-                isGrounded = false;
-            
             if (isGrounded)
             {
                 horizontalVelocity = Vector3.Lerp(
@@ -103,7 +102,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 nextUngroundedTime = -1f;
                 isGrounded = false;
             }
-
+            
             var resultVelocity = horizontalVelocity;
             
             if (isGrounded)
@@ -134,9 +133,11 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 resultVelocity = dashDirection * 15;
                 horizontalVelocity = Vector3.zero;
                 verticalSpeed = 0;
+                mover.isInWalkMode = false;
             }
             
             mover.Move(resultVelocity * deltaTime, moveContacts, out contactCount);
+            shouldMoveUp = false;
         }
 
         private void LateUpdate()
@@ -160,6 +161,11 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private bool DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo)
         {
+            groundInfo = default;
+            isGrounded = false;
+            if (shouldMoveUp)
+                return false;
+            
             bool groundDetected = groundDetector.DetectGround(out groundInfo);
 
             if (groundDetected)
@@ -178,17 +184,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         {
             if (groundedIndicator != null)
                 groundedIndicator.material.color = isGrounded ? Color.green : Color.blue;
-        }
-
-        private void RotateTowards(in Vector3 direction)
-        {
-            Vector3 flatDirection = Vector3.ProjectOnPlane(direction, transform.up);
-
-            if (flatDirection.sqrMagnitude < 1E-06f)
-                return;
-
-            Quaternion targetRotation = Quaternion.LookRotation(flatDirection, transform.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
         private void ApplyPlatformMovement(MovingPlatform movingPlatform)
