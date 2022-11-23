@@ -2,43 +2,91 @@
 
 using MenteBacata.ScivoloCharacterController;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace MenteBacata.ScivoloCharacterControllerDemo
 {
+    public enum MovementState
+    {
+        Moving,
+        Dashing
+    }
+    
     public class ScivoloKinematicMovement : MonoBehaviour
     {
         public float moveSpeed = 5f;
         public float jumpSpeed = 8f;
         public float rotationSpeed = 720f;
         public float gravity = -25f;
+        public float minVerticalSpeed = -12f;
         public CharacterMover mover;
         public GroundDetector groundDetector;
         public MeshRenderer groundedIndicator;
-        
-        private const float minVerticalSpeed = -12f;
+
         private const float timeBeforeUngrounded = 0.02f;
-        private float verticalSpeed = 0f;
         private float nextUngroundedTime = -1f;
+        private float verticalSpeed = 0;
+        private Vector3 horizontalVelocity;
         private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
         private int contactCount;
         private bool isOnMovingPlatform = false;
         private MovingPlatform movingPlatform;
-
+        private float dashTime = 0;
+        private Vector3 dashDirection;
+        
         private void Start()
         {
             cameraTransform = Camera.main.transform;
             mover.canClimbSteepSlope = true;
         }
+        
+        public void SetVelocity(Vector3 velocity)
+        {
+            verticalSpeed = velocity.y;
+            velocity.y = 0;
+            horizontalVelocity = velocity;
+        }
 
         private void Update()
         {
-            float deltaTime = Time.deltaTime;
-            Vector3 movementInput = GetMovementInput();
+            var deltaTime = Time.deltaTime;
+            var movementInput = GetMovementInput();
+            
+            // Dash
+            if (Input.GetKeyDown(KeyCode.LeftShift) &&
+                dashTime <= 0 &&
+                movementInput != Vector3.zero)
+            {
+                dashTime = 0.3f;
+                dashDirection = movementInput.normalized;
+            }
 
-            Vector3 velocity = moveSpeed * movementInput;
-
-            bool groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
+            var groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
+            if (isGrounded)
+            {
+                horizontalVelocity = Vector3.Lerp(
+                    horizontalVelocity,
+                    movementInput * moveSpeed, 
+                    Time.deltaTime * 12);
+            }
+            else
+            {
+                var airMotion = movementInput * (deltaTime * 15);
+                var airHorizontalVelocity = horizontalVelocity + airMotion;
+                if (airHorizontalVelocity.sqrMagnitude <= moveSpeed * moveSpeed)
+                {
+                    horizontalVelocity = airHorizontalVelocity;
+                }
+                else
+                {
+                    if (Mathf.Abs(airHorizontalVelocity.x) < Mathf.Abs(horizontalVelocity.x))
+                        horizontalVelocity.x = airHorizontalVelocity.x;
+                    if (Mathf.Abs(airHorizontalVelocity.z) < Mathf.Abs(horizontalVelocity.z))
+                        horizontalVelocity.z = airHorizontalVelocity.z;
+                }
+            }
 
             SetGroundedIndicatorColor(isGrounded);
 
@@ -51,7 +99,9 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 isGrounded = false;
             }
 
-            if (isGrounded)
+            var resultVelocity = horizontalVelocity;
+            
+            if (isGrounded && verticalSpeed <= 0)
             {
                 mover.isInWalkMode = true;
                 verticalSpeed = 0f;
@@ -70,10 +120,18 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 if (verticalSpeed < minVerticalSpeed)
                     verticalSpeed = minVerticalSpeed;
 
-                velocity += verticalSpeed * transform.up;
+                resultVelocity += verticalSpeed * transform.up;
             }
 
-            mover.Move(velocity * deltaTime, moveContacts, out contactCount);
+            if (dashTime > 0)
+            {
+                dashTime -= Time.deltaTime;
+                resultVelocity = dashDirection * 15;
+                horizontalVelocity = Vector3.zero;
+                verticalSpeed = 0;
+            }
+            
+            mover.Move(resultVelocity * deltaTime, moveContacts, out contactCount);
         }
 
         private void LateUpdate()
@@ -90,7 +148,9 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             Vector3 forward = Vector3.ProjectOnPlane(cameraTransform.forward, transform.up).normalized;
             Vector3 right = Vector3.Cross(transform.up, forward);
 
-            return x * right + y * forward;
+            var result = x * right + y * forward;
+            result = Vector3.ClampMagnitude(result, 1);
+            return result;
         }
 
         private bool DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo)
