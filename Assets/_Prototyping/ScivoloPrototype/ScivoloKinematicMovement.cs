@@ -22,6 +22,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         public float minVerticalSpeed = -12f;
         public float moveInputChangeRate = 12;
         public float airSpeedChangeRate = 15;
+        public float speedFallDuringCollision = 8;
         public CharacterMover mover;
         public GroundDetector groundDetector;
         public MeshRenderer groundedIndicator;
@@ -147,17 +148,22 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             mover.Move(resultVelocity * deltaTime, moveContacts, out contactCount);
             var afterPosition = mover.transform.position;
             var positionDifference = afterPosition - beforePosition;
-            ClampInputVelocityByRealMotion(positionDifference);
+            var realVelocity = positionDifference / Time.deltaTime;
+            ClampInputVelocityByRealVelocity(realVelocity);
             shouldMoveUp = false;
         }
 
-        private void ClampInputVelocityByRealMotion(Vector3 positionDifference)
+        private void ClampInputVelocityByRealVelocity(Vector3 realVelocity)
         {
-            positionDifference.y = 0;
-            var realMagnitude = positionDifference.magnitude / Time.deltaTime;
-            var inputMagnitude = horizontalVelocity.magnitude;
-            var newMagnitude = Mathf.Lerp(inputMagnitude, realMagnitude, Time.deltaTime * 8);
-            horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, newMagnitude);
+            var combinedVelocity = horizontalVelocity + new Vector3(0, verticalSpeed, 0);
+            var clampedMagnitude = Mathf.Lerp(
+                combinedVelocity.magnitude, 
+                realVelocity.magnitude, 
+                speedFallDuringCollision * Time.deltaTime);
+            combinedVelocity = Vector3.ClampMagnitude(combinedVelocity, clampedMagnitude);
+            verticalSpeed = combinedVelocity.y;
+            combinedVelocity.y = 0;
+            horizontalVelocity = combinedVelocity;
         }
 
         private void LateUpdate()
