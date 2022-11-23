@@ -20,6 +20,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         public float rotationSpeed = 720f;
         public float gravity = -25f;
         public float minVerticalSpeed = -12f;
+        public float groundSpeedChangeRate = 15;
+        public float airSpeedChangeRate = 15;
         public CharacterMover mover;
         public GroundDetector groundDetector;
         public MeshRenderer groundedIndicator;
@@ -64,16 +66,19 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             }
 
             var groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
+            if (isGrounded == verticalSpeed > 0)
+                isGrounded = false;
+            
             if (isGrounded)
             {
                 horizontalVelocity = Vector3.Lerp(
                     horizontalVelocity,
                     movementInput * moveSpeed, 
-                    Time.deltaTime * 12);
+                    Time.deltaTime * groundSpeedChangeRate);
             }
             else
             {
-                var airMotion = movementInput * (deltaTime * 15);
+                var airMotion = movementInput * (deltaTime * airSpeedChangeRate);
                 var airHorizontalVelocity = horizontalVelocity + airMotion;
                 if (airHorizontalVelocity.sqrMagnitude <= moveSpeed * moveSpeed)
                 {
@@ -101,7 +106,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
             var resultVelocity = horizontalVelocity;
             
-            if (isGrounded && verticalSpeed <= 0)
+            if (isGrounded)
             {
                 mover.isInWalkMode = true;
                 verticalSpeed = 0f;
