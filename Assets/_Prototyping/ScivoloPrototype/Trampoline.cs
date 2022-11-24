@@ -18,6 +18,12 @@ namespace _Prototyping.ScivoloPrototype
                 movement.SetVelocity(power);
                 _cooldown = 0.3f;
             }
+
+            var rb = collision.rigidbody;
+            if (rb && !rb.isKinematic)
+            {
+                rb.AddForce(power, ForceMode.Impulse);
+            }
         }
 
         private void Update()
