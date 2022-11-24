@@ -40,7 +40,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private MovingPlatform movingPlatform;
         private float dashTime = 0;
         private Vector3 dashDirection;
-        private bool shouldMoveUp;
         
         private void Start()
         {
@@ -53,7 +52,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             verticalSpeed = velocity.y;
             velocity.y = 0;
             additionalHorizontalVelocity = velocity;
-            shouldMoveUp = verticalSpeed > 0;
+            nextUngroundedTime = -1;
         }
 
         private void Update()
@@ -145,7 +144,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             var positionDifference = afterPosition - beforePosition;
             var realVelocity = positionDifference / Time.deltaTime;
             ClampInputVelocityByRealVelocity(realVelocity);
-            shouldMoveUp = false;
         }
 
         private void ClampInputVelocityByRealVelocity(Vector3 realVelocity)
@@ -181,13 +179,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private bool DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo)
         {
-            if (shouldMoveUp)
-            {
-                groundInfo = default;
-                isGrounded = false;
-                return false;
-            }
-            
             var groundDetected = groundDetector.DetectGround(out groundInfo);
 
             if (groundDetected)
