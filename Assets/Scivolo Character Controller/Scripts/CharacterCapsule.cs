@@ -189,8 +189,10 @@ namespace MenteBacata.ScivoloCharacterController
         {
             Collider = gameObject.AddComponent<CapsuleCollider>();
             SetColliderProperties();
-
-            Rigidbody = gameObject.AddComponent<Rigidbody>();
+            
+            Rigidbody = gameObject.GetComponent<Rigidbody>();
+            if (!Rigidbody)
+                Rigidbody = gameObject.AddComponent<Rigidbody>();
             Rigidbody.isKinematic = true;
         }
 
