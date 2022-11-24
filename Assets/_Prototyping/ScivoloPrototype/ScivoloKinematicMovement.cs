@@ -134,7 +134,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
             if (previousMovingPlatform && !movingPlatform)
             {
-                Debug.Log("Exited");
                 previousMovingPlatform.GetDeltaPositionAndRotation(out var deltaPosition, out var deltaRotation);
                 deltaPosition /= Time.deltaTime;
                 horizontalVelocity += deltaPosition;
