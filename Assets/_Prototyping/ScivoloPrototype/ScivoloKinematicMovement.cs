@@ -1,19 +1,9 @@
-﻿//#define MB_DEBUG
-
-using _Prototyping.ScivoloPrototype;
-using MenteBacata.ScivoloCharacterController;
+﻿using MenteBacata.ScivoloCharacterController;
+using MenteBacata.ScivoloCharacterControllerDemo;
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
-namespace MenteBacata.ScivoloCharacterControllerDemo
+namespace _Prototyping.ScivoloPrototype
 {
-    public enum MovementState
-    {
-        Moving,
-        Dashing
-    }
-    
     public class ScivoloKinematicMovement : MonoBehaviour
     {
         public float moveSpeed = 5f;
