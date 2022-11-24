@@ -31,6 +31,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private float nextUngroundedTime = -1f;
         private float verticalSpeed = 0;
         private Vector3 horizontalVelocity;
+        private Vector3 additionalHorizontalVelocity;
         private Vector3 lerpedInput;
         private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
@@ -51,7 +52,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         {
             verticalSpeed = velocity.y;
             velocity.y = 0;
-            horizontalVelocity = velocity;
+            additionalHorizontalVelocity = velocity;
             shouldMoveUp = verticalSpeed > 0;
         }
 
@@ -75,28 +76,22 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             if (isGrounded)
             {
                 horizontalVelocity = movementInput * moveSpeed;
+                additionalHorizontalVelocity = Vector3.zero;
             }
             else
             {
                 var airMotion = movementInput * (deltaTime * airSpeedChangeRate);
-                var airHorizontalVelocity = horizontalVelocity + airMotion;
-                airHorizontalVelocity = Vector3.ClampMagnitude(airHorizontalVelocity, moveSpeed);
-                horizontalVelocity = airHorizontalVelocity;
+                horizontalVelocity += airMotion;
+                horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, moveSpeed);
 
-                /*
-                if (airHorizontalVelocity.sqrMagnitude <= moveSpeed * moveSpeed)
+                if (additionalHorizontalVelocity != Vector3.zero)
                 {
-                    horizontalVelocity = airHorizontalVelocity;
+                    var newAdditionalVelocity = additionalHorizontalVelocity + airMotion;
+                    if (Mathf.Abs(newAdditionalVelocity.x) < Mathf.Abs(additionalHorizontalVelocity.x))
+                        additionalHorizontalVelocity.x = newAdditionalVelocity.x;
+                    if (Mathf.Abs(newAdditionalVelocity.z) < Mathf.Abs(additionalHorizontalVelocity.z))
+                        additionalHorizontalVelocity.z = newAdditionalVelocity.z;
                 }
-                else
-                {                    
-                    if (Mathf.Abs(airHorizontalVelocity.x) < Mathf.Abs(horizontalVelocity.x))
-                        horizontalVelocity.x = airHorizontalVelocity.x;
-
-                    if (Mathf.Abs(airHorizontalVelocity.z) < Mathf.Abs(horizontalVelocity.z))
-                        horizontalVelocity.z = airHorizontalVelocity.z;
-                }
-                */
             }
 
             SetGroundedIndicatorColor(isGrounded);
@@ -110,7 +105,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 isGrounded = false;
             }
             
-            var resultVelocity = horizontalVelocity;
+            var resultVelocity = horizontalVelocity + additionalHorizontalVelocity;
             
             if (isGrounded)
             {
