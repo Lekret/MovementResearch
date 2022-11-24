@@ -42,7 +42,7 @@ namespace _Prototyping.ScivoloPrototype
             nextUngroundedTime = -1;
         }
 
-        private void Update()
+        public void CustomUpdate()
         {
             var deltaTime = Time.deltaTime;
             var movementInput = GetMovementInput();
@@ -159,7 +159,7 @@ namespace _Prototyping.ScivoloPrototype
             }
         }
 
-        private void LateUpdate()
+        public void CustomMoveToPlatformUpdate()
         {
             TryApplyPlatformMovement();
         }

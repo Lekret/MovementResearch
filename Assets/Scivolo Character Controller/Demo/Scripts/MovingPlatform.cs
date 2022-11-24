@@ -34,7 +34,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             end.SetParent(transform.parent, true);
         }
 
-        private void Update()
+        public void CustomUpdate()
         {
             float deltaTime = Time.deltaTime;
             deltaPosition = Vector3.MoveTowards(Vector3.zero, CurrentDestination - transform.position, speed * deltaTime);

@@ -29,7 +29,7 @@ namespace _Prototyping.ScivoloPrototype
             }
         }
 
-        private void LateUpdate()
+        public void CustomUpdate()
         {
             _platform.GetDeltaPositionAndRotation(out var deltaPosition, out var deltaRotation);
             var position = _platform.transform.position;
