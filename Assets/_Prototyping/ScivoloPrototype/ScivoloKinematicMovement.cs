@@ -12,7 +12,6 @@ namespace _Prototyping.ScivoloPrototype
         public float minVerticalSpeed = -12f;
         public float groundSpeedChangeRate = 12;
         public float airSpeedChangeRate = 15;
-        public float speedFallDuringCollision = 8;
         public CharacterMover mover;
         public GroundDetector groundDetector;
         public MeshRenderer groundedIndicator;
