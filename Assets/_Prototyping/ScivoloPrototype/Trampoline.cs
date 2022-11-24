@@ -16,6 +16,7 @@ namespace _Prototyping.ScivoloPrototype
             if (collision.collider.TryGetComponent(out ScivoloKinematicMovement movement))
             {
                 movement.SetVelocity(power);
+                _cooldown = 0.3f;
             }
         }
 
