@@ -35,7 +35,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
         private int contactCount;
-        private bool isOnMovingPlatform = false;
         private MovingPlatform movingPlatform;
         private float dashTime = 0;
         private Vector3 dashDirection;
@@ -96,7 +95,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
             SetGroundedIndicatorColor(isGrounded);
 
-            isOnMovingPlatform = false;
+            var previousMovingPlatform = movingPlatform;
+            movingPlatform = null;
 
             if (isGrounded && Input.GetButtonDown("Jump"))
             {
@@ -113,7 +113,9 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 verticalSpeed = 0f;
 
                 if (groundDetected)
-                    isOnMovingPlatform = groundInfo.collider.TryGetComponent(out movingPlatform);
+                {
+                    groundInfo.collider.TryGetComponent(out movingPlatform);
+                }
             }
             else
             {
@@ -130,6 +132,17 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 resultVelocity += verticalSpeed * transform.up;
             }
 
+            if (previousMovingPlatform && !movingPlatform)
+            {
+                Debug.Log("Exited");
+                previousMovingPlatform.GetDeltaPositionAndRotation(out var deltaPosition, out var deltaRotation);
+                deltaPosition /= Time.deltaTime;
+                horizontalVelocity += deltaPosition;
+                horizontalVelocity.y = 0;
+                verticalSpeed += deltaPosition.y;
+                resultVelocity += deltaPosition;
+            }
+            
             if (dashTime > 0)
             {
                 dashTime -= Time.deltaTime;
@@ -151,7 +164,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 var contact = moveContacts[i];
                 var combinedVelocity = horizontalVelocity + new Vector3(0, verticalSpeed, 0);
                 combinedVelocity = Vector3.ProjectOnPlane(combinedVelocity, contact.normal);
-                if (verticalSpeed < 0.1f)
+                if (verticalSpeed < 0)
                     verticalSpeed = combinedVelocity.y;
                 horizontalVelocity = combinedVelocity;
                 horizontalVelocity.y = 0;
@@ -202,7 +215,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
 
         private void TryApplyPlatformMovement()
         {
-            if (!isOnMovingPlatform)
+            if (!movingPlatform)
                 return;
             
             movingPlatform.GetDeltaPositionAndRotation(out var deltaPosition, out var deltaRotation);
