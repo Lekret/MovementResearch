@@ -20,7 +20,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         public float jumpSpeed = 8f;
         public float gravity = -25f;
         public float minVerticalSpeed = -12f;
-        public float moveInputChangeRate = 12;
+        public float groundSpeedChangeRate = 12;
         public float airSpeedChangeRate = 15;
         public float speedFallDuringCollision = 8;
         public CharacterMover mover;
@@ -32,7 +32,6 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         private float verticalSpeed = 0;
         private Vector3 horizontalVelocity;
         private Vector3 additionalHorizontalVelocity;
-        private Vector3 lerpedInput;
         private Transform cameraTransform;
         private MoveContact[] moveContacts = CharacterMover.NewMoveContactArray;
         private int contactCount;
@@ -59,9 +58,7 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
         {
             var deltaTime = Time.deltaTime;
             var movementInput = GetMovementInput();
-            movementInput = Vector3.Lerp(lerpedInput, movementInput, deltaTime * moveInputChangeRate);
-            lerpedInput = movementInput;
-            
+
             // Dash
             if (Input.GetKeyDown(KeyCode.LeftShift) &&
                 dashTime <= 0 &&
@@ -74,7 +71,11 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
             var groundDetected = DetectGroundAndCheckIfGrounded(out bool isGrounded, out GroundInfo groundInfo);
             if (isGrounded)
             {
-                horizontalVelocity = movementInput * moveSpeed;
+                var targetHorizontalVelocity = movementInput * moveSpeed;
+                horizontalVelocity = Vector3.Lerp(
+                    horizontalVelocity, 
+                    targetHorizontalVelocity,
+                    groundSpeedChangeRate * deltaTime);
                 additionalHorizontalVelocity = Vector3.zero;
             }
             else

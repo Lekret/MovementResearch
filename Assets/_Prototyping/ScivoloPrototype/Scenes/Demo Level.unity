@@ -11737,7 +11737,7 @@ MonoBehaviour:
   jumpSpeed: 12
   gravity: -25
   minVerticalSpeed: -18
-  moveInputChangeRate: 12
+  groundSpeedChangeRate: 15
   airSpeedChangeRate: 30
   speedFallDuringCollision: 4
   mover: {fileID: 2573877700382832788}
