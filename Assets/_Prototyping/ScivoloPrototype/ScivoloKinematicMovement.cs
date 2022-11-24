@@ -139,25 +139,23 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 mover.isInWalkMode = false;
             }
 
-            var beforePosition = mover.transform.position;
             mover.Move(resultVelocity * deltaTime, moveContacts, out contactCount);
-            var afterPosition = mover.transform.position;
-            var positionDifference = afterPosition - beforePosition;
-            var realVelocity = positionDifference / Time.deltaTime;
-            ClampInputVelocityByRealVelocity(realVelocity);
+            if (!isGrounded)
+                ClampAirVelocity();
         }
 
-        private void ClampInputVelocityByRealVelocity(Vector3 realVelocity)
+        private void ClampAirVelocity()
         {
-            var combinedVelocity = horizontalVelocity + new Vector3(0, verticalSpeed, 0);
-            var clampedMagnitude = Mathf.Lerp(
-                combinedVelocity.magnitude, 
-                realVelocity.magnitude, 
-                speedFallDuringCollision * Time.deltaTime);
-            combinedVelocity = Vector3.ClampMagnitude(combinedVelocity, clampedMagnitude);
-            verticalSpeed = combinedVelocity.y;
-            horizontalVelocity = combinedVelocity;
-            horizontalVelocity.y = 0;
+            for (var i = 0; i < contactCount; i++)
+            {
+                var contact = moveContacts[i];
+                var combinedVelocity = horizontalVelocity + new Vector3(0, verticalSpeed, 0);
+                combinedVelocity = Vector3.ProjectOnPlane(combinedVelocity, contact.normal);
+                if (verticalSpeed < 0.1f)
+                    verticalSpeed = combinedVelocity.y;
+                horizontalVelocity = combinedVelocity;
+                horizontalVelocity.y = 0;
+            }
         }
 
         private void LateUpdate()
