@@ -156,8 +156,8 @@ namespace MenteBacata.ScivoloCharacterControllerDemo
                 speedFallDuringCollision * Time.deltaTime);
             combinedVelocity = Vector3.ClampMagnitude(combinedVelocity, clampedMagnitude);
             verticalSpeed = combinedVelocity.y;
-            combinedVelocity.y = 0;
             horizontalVelocity = combinedVelocity;
+            horizontalVelocity.y = 0;
         }
 
         private void LateUpdate()
